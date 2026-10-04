@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ørsted's Compass — Upside Down Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1B2541; --navy2:#26325A; --grid:#33416B; --cream:#F4EFE6; --card:#FFFFFF;
+    --gold:#E2AC48; --ochre:#8A5A12; --teal:#2E7D74; --tealB:#45B3A5; --orange:#D9773A;
+    --ink:#1B2541; --line:#E6DDCB;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  html{overflow:hidden}
+  body{background:var(--cream);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased}
+  .wrap{width:1000px;transform-origin:top left;background:var(--cream)}
+  header{background:var(--navy);padding:14px 24px 12px;color:#fff}
+  h1{font-size:1.6rem;font-weight:800;margin:0;letter-spacing:.01em}
+  .bar{width:150px;height:4px;background:var(--gold);border-radius:2px;margin:6px 0 6px}
+  .sub{font-size:.92rem;font-weight:700;color:#F4EFE6}
+  main{padding:12px 20px 8px}
+  .stage{display:grid;gap:12px;align-items:start}
+  .card{background:var(--card);border-radius:12px;padding:10px 14px 12px;box-shadow:0 1px 3px rgba(27,37,65,.12)}
+  .card h2{display:flex;align-items:center;gap:9px;font-size:.84rem;font-weight:800;letter-spacing:.06em;margin:0 0 8px;color:var(--navy)}
+  .ic{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .ic svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .ic.gold{background:var(--gold)} .ic.gold svg{stroke:var(--navy)}
+  .ic.teal{background:var(--teal)} .ic.orange{background:var(--orange)} .ic.navy{background:var(--navy)}
+  canvas{display:block;width:100%;background:var(--navy);border-radius:10px}
+  .hint{font-size:.8rem;font-weight:700;color:var(--ochre);margin-top:6px}
+  .panel{display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row .k{font-size:.9rem;font-weight:700;white-space:nowrap}
+  .row .v{font-size:1.1rem;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;color:var(--navy)}
+  .row .v.hot{color:var(--orange)}
+  input[type=range]{width:100%;accent-color:var(--gold)}
+  .ends{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700;color:var(--ochre)}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  button{font-family:inherit;font-size:.9rem;font-weight:800;background:var(--navy);color:#fff;border:2px solid var(--navy);border-radius:8px;padding:7px 10px;cursor:pointer}
+  button:hover{background:var(--navy2)}
+  button.teal{background:var(--teal);border-color:var(--teal)}
+  button.teal:hover{background:#25685F}
+  button.ghost{background:#fff;color:var(--navy)}
+  button.ghost:hover{background:var(--cream)}
+  button.on{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+  button.wide{grid-column:1/-1}
+  button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  footer{display:flex;justify-content:space-between;gap:12px;padding:6px 22px 10px;font-size:.8rem;font-weight:700;color:var(--ochre)}
+
+  .stage{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+  canvas{height:auto;touch-action:none;cursor:grab}
+  canvas.dragging{cursor:grabbing}
+  .row .v.off{color:var(--orange)}
+  .btns{grid-template-columns:1fr}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>&Oslash;rsted&rsquo;s Compass</h1>
+    <div class="bar"></div>
+    <div class="sub">A wire runs north to south above the bench. Move the compass and close the switch.</div>
+  </header>
+  <main>
+  <div class="stage">
+    <div class="card">
+      <h2><span class="ic orange"><svg viewBox="0 0 24 24"><path d="M13 2L5 14h6l-1 8 8-12h-6z"/></svg></span>BENCH SEEN FROM ABOVE · NORTH IS UP</h2>
+      <canvas id="c" width="1400" height="820" tabindex="0" aria-label="A bench seen from above, with a battery, a wire running north to south, and a compass that can be moved."></canvas>
+      <div class="hint">Drag the compass. Arrow keys work too.</div>
+    </div>
+    <div class="panel">
+      <div class="card">
+        <h2><span class="ic gold"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 5l2.5 7-2.5 7-2.5-7z"/></svg></span>READINGS</h2>
+        <div class="row"><span class="k">Current</span><span class="v off" id="rCur">off</span></div>
+        <div class="row"><span class="k">Distance from wire</span><span class="v" id="rDist">0 cm</span></div>
+        <div class="row"><span class="k">Needle points</span><span class="v" id="rDefl">north</span></div>
+      </div>
+      <div class="card">
+        <h2><span class="ic teal"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 11l9-5"/></svg></span>CIRCUIT</h2>
+        <div class="btns">
+          <button id="bSwitch" class="teal">Close the switch</button>
+          <button id="bFlip" class="ghost">Reverse the current</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </main>
+  <footer><span>Upside Down Learning</span><span>Seen from above. North is toward the top of the bench.</span></footer>
+</div>
+<script>
+(function(){
+  "use strict";
+  var cv=document.getElementById('c'),ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height;
+  var C={navy:"#1B2541",grid:"#33416B",cream:"#F4EFE6",gold:"#E2AC48",teal:"#45B3A5",orange:"#D9773A",copper:"#E08A3C",dim:"#6B7799",steel:"#A9B0BF"};
+  var FONT="'Nunito',system-ui,sans-serif";
+  var WX=W*0.52,TOP=H*0.10,BOT=H*0.90,on=false,dir=1,cx=W*0.68,cy=H*0.50;
+  var CR=Math.min(W,H)*0.10,PX_PER_CM=(W*0.34)/30,HGT=6;
+  function distanceCm(){return Math.abs(cx-WX)/PX_PER_CM;}
+  function deflection(){if(!on)return 0;var d=distanceCm();var s=34*HGT/(d*d+HGT*HGT);return Math.atan(s)*180/Math.PI*dir;}
+  function drawBench(){ctx.save();ctx.strokeStyle=C.grid;ctx.lineWidth=2;
+    for(var k=-3;k<=3;k++){if(k===0)continue;var x=WX+k*10*PX_PER_CM;if(x<30||x>W-30)continue;
+      ctx.setLineDash([6,8]);ctx.beginPath();ctx.moveTo(x,TOP);ctx.lineTo(x,BOT);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.gold;ctx.font='800 22px '+FONT;ctx.textAlign='center';ctx.fillText(Math.abs(k*10)+' cm',x,BOT+34);}
+    ctx.restore();}
+  function drawPile(){var px=W*0.115,py=H*0.74,w=130,disc=17,n=8;ctx.save();
+    for(var i=0;i<n;i++){var y=py-i*disc;ctx.fillStyle=(i%2===0)?C.steel:C.copper;ctx.fillRect(px-w/2,y,w,disc-2);
+      ctx.lineWidth=2;ctx.strokeStyle=C.navy;ctx.strokeRect(px-w/2,y,w,disc-2);}
+    ctx.fillStyle=C.cream;ctx.font='800 22px '+FONT;ctx.textAlign='left';ctx.fillText('voltaic pile',px+w/2+16,py-40);
+    ctx.restore();return{x:px,top:py-(n-1)*disc,bot:py+disc-2};}
+  function drawCircuit(p){ctx.save();
+    if(on){ctx.shadowColor='rgba(224,138,60,0.6)';ctx.shadowBlur=16;}
+    ctx.lineWidth=8;ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle=on?C.copper:C.dim;
+    ctx.beginPath();ctx.moveTo(WX,TOP);ctx.lineTo(WX,BOT);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(WX,TOP);ctx.lineTo(p.x,TOP);ctx.lineTo(p.x,p.top-34);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(WX,BOT);ctx.lineTo(p.x+150,BOT);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(p.x,p.bot+8);ctx.lineTo(p.x,BOT);ctx.lineTo(p.x+150,BOT);ctx.stroke();
+    ctx.shadowBlur=0;
+    var sx=(p.x+WX)/2,sy=TOP;ctx.fillStyle=C.navy;ctx.fillRect(sx-30,sy-8,60,16);
+    ctx.strokeStyle=C.gold;ctx.lineWidth=4;
+    ctx.beginPath();ctx.arc(sx-34,sy,8,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(sx+34,sy,8,0,Math.PI*2);ctx.stroke();
+    ctx.lineWidth=7;ctx.strokeStyle=on?C.copper:C.gold;ctx.beginPath();ctx.moveTo(sx-34,sy);
+    if(on)ctx.lineTo(sx+34,sy);else ctx.lineTo(sx+18,sy-38);ctx.stroke();
+    ctx.fillStyle=C.cream;ctx.font='800 20px '+FONT;ctx.textAlign='center';ctx.fillText('switch',sx,sy-52);
+    if(on){ctx.fillStyle=C.cream;for(var y=TOP+70;y<BOT-40;y+=96){ctx.beginPath();ctx.moveTo(WX,y-dir*17);ctx.lineTo(WX-11,y+dir*10);ctx.lineTo(WX+11,y+dir*10);ctx.closePath();ctx.fill();}}
+    ctx.fillStyle=C.cream;ctx.font='800 22px '+FONT;ctx.textAlign='left';ctx.fillText('wire above the bench',WX+18,TOP-14);
+    ctx.restore();}
+  function drawCompass(){ctx.save();
+    ctx.beginPath();ctx.arc(cx,cy,CR,0,Math.PI*2);ctx.fillStyle=C.cream;ctx.fill();ctx.lineWidth=6;ctx.strokeStyle=C.gold;ctx.stroke();
+    ctx.fillStyle=C.navy;ctx.font='800 22px '+FONT;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('N',cx,cy-CR*0.78);ctx.fillText('S',cx,cy+CR*0.78);ctx.fillText('E',cx+CR*0.78,cy);ctx.fillText('W',cx-CR*0.78,cy);
+    var th=(-90+deflection())*Math.PI/180,L=CR*0.72,HW=CR*0.15,dx=Math.cos(th),dy=Math.sin(th),px=-dy,py=dx;
+    ctx.beginPath();ctx.moveTo(cx+dx*L,cy+dy*L);ctx.lineTo(cx+px*HW,cy+py*HW);ctx.lineTo(cx-px*HW,cy-py*HW);ctx.closePath();
+    ctx.fillStyle=C.orange;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle=C.navy;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-dx*L,cy-dy*L);ctx.lineTo(cx+px*HW,cy+py*HW);ctx.lineTo(cx-px*HW,cy-py*HW);ctx.closePath();
+    ctx.fillStyle=C.steel;ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.arc(cx,cy,HW*0.7,0,Math.PI*2);ctx.fillStyle=C.gold;ctx.fill();ctx.stroke();ctx.restore();}
+  function render(){ctx.clearRect(0,0,W,H);drawBench();var p=drawPile();drawCircuit(p);drawCompass();
+    var cEl=document.getElementById('rCur');cEl.textContent=on?(dir>0?'flowing north':'flowing south'):'off';cEl.className=on?'v':'v off';
+    document.getElementById('rDist').textContent=distanceCm().toFixed(0)+' cm';
+    var d=deflection();document.getElementById('rDefl').textContent=(Math.abs(d)<0.5)?'north':Math.abs(d).toFixed(0)+'° '+(d>0?'east of north':'west of north');
+    var b=document.getElementById('bSwitch');b.textContent=on?'Open the switch':'Close the switch';}
+  var dragging=false;
+  function place(ev){var r=cv.getBoundingClientRect(),k=r.width/W;cx=(ev.clientX-r.left)/k;cy=(ev.clientY-r.top)/k;
+    cx=Math.max(CR+14,Math.min(W-CR-14,cx));cy=Math.max(TOP+CR+10,Math.min(BOT-CR-10,cy));}
+  cv.addEventListener('pointerdown',function(ev){dragging=true;cv.classList.add('dragging');cv.setPointerCapture(ev.pointerId);place(ev);render();});
+  cv.addEventListener('pointermove',function(ev){if(dragging){place(ev);render();}});
+  cv.addEventListener('pointerup',function(){dragging=false;cv.classList.remove('dragging');});
+  cv.addEventListener('keydown',function(ev){var s=ev.shiftKey?3:12;
+    if(ev.key==='ArrowLeft')cx=Math.max(CR+14,cx-s);else if(ev.key==='ArrowRight')cx=Math.min(W-CR-14,cx+s);
+    else if(ev.key==='ArrowUp')cy=Math.max(TOP+CR+10,cy-s);else if(ev.key==='ArrowDown')cy=Math.min(BOT-CR-10,cy+s);else return;
+    ev.preventDefault();render();});
+  document.getElementById('bSwitch').addEventListener('click',function(){on=!on;render();});
+  document.getElementById('bFlip').addEventListener('click',function(){dir=-dir;render();});
+  var wrap=document.querySelector('.wrap');
+  function fit(){wrap.style.transform="none";wrap.style.marginLeft="0";var s=Math.min(window.innerWidth/wrap.offsetWidth,window.innerHeight/wrap.offsetHeight);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=Math.max(0,(window.innerWidth-wrap.offsetWidth*s)/2)+"px";}
+  window.addEventListener('resize',fit);
+  (document.fonts?document.fonts.ready:Promise.resolve()).then(function(){render();fit();});
+  render();fit();
+})();
+</script>
+</body>
+</html>
